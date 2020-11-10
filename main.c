@@ -54,9 +54,10 @@
 
 /* ------------------------ Prototipos de funciones ------------------------- */
 void gpio_config();
-
+void show_num(int num);
 /* ------------------------ Implementación de funciones --------------------- */
 void main(void) {                       // Función principal
+    int i;
     gpio_config();                      // Inicializo las entradas y salidas
 
     PORTD = 0;
@@ -68,18 +69,19 @@ void main(void) {                       // Función principal
     max7219_set_intensity (MAX_DISPLAY_0, 15);
     max7219_clear_display(MAX_DISPLAY_0);
     
-    max7219_set_led(MAX_DISPLAY_0, 5, 5, LED_ON);
     
-    while(1) {                          // Super loop
+    
+    while (1) { // Super loop
         // Ver este link: https://pbs.twimg.com/media/BafQje7CcAAN5en.jpg
-        
-        if( PIN_TEC1 == 0 ) {           // Espero que se presione la TEC1
-            __delay_ms(40);             // Delay antirrebote
-            
-            PIN_LED1 = !PIN_LED1;       // Toggle LED1
 
-            while( PIN_TEC1 == 0 );     // Espero que se suelte la TEC1
-            __delay_ms(40);             // Delay antirrebote
+        for (i = 1; i <= 6; i++) {
+            show_num(i);
+            __delay_ms(50);
+
+
+            if (PIN_TEC1 == 0) { // Espero que se presione la TEC1
+                __delay_ms(3000); // Delay antirrebote
+            }
         }
     }
     
@@ -103,5 +105,51 @@ void gpio_config() {
     TRIS_LED1 = 0;                      // Configuro el LED1 como salida
     
     TRISD = 0;
+}
+void show_num(int num){
+    max7219_clear_display(MAX_DISPLAY_0);
+    switch(num){
+        case 1:            
+            max7219_set_row(MAX_DISPLAY_0, 3, 0b00011000);
+            max7219_set_row(MAX_DISPLAY_0, 4, 0b00011000);
+            break;
+        case 2:
+            max7219_set_row(MAX_DISPLAY_0, 1, 0b01100000);
+            max7219_set_row(MAX_DISPLAY_0, 2, 0b01100000);
+            max7219_set_row(MAX_DISPLAY_0, 5, 0b00000110);
+            max7219_set_row(MAX_DISPLAY_0, 6, 0b00000110);
+            break;
+        case 3:
+            max7219_set_row(MAX_DISPLAY_0, 1, 0b01100000);
+            max7219_set_row(MAX_DISPLAY_0, 2, 0b01100000);
+            max7219_set_row(MAX_DISPLAY_0, 3, 0b00011000);
+            max7219_set_row(MAX_DISPLAY_0, 4, 0b00011000);
+            max7219_set_row(MAX_DISPLAY_0, 5, 0b00000110);
+            max7219_set_row(MAX_DISPLAY_0, 6, 0b00000110);
+            break;
+        case 4:
+            max7219_set_row(MAX_DISPLAY_0, 1, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 2, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 5, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
+            break;
+        case 5:
+            max7219_set_row(MAX_DISPLAY_0, 1, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 2, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 3, 0b00011000);
+            max7219_set_row(MAX_DISPLAY_0, 4, 0b00011000);
+            max7219_set_row(MAX_DISPLAY_0, 5, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
+            break;
+        case 6:
+            max7219_set_row(MAX_DISPLAY_0, 0, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 1, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 3, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 4, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 7, 0b01100110);
+            break;
+       
+    }
 }
 /* ------------------------ Fin de archivo ---------------------------------- */
