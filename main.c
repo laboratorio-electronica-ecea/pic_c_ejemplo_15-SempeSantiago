@@ -4,9 +4,11 @@
  *
  * Descripción: 
  *        Proyecto usando un display matricial con MAX7219.
+ *        Sistema de cordenadas q mantiene encendidos los LEDs q se le piden
  */
 
 #include <xc.h>
+#include <stdio.h>
 #include <stdint.h>
 
 #include "max7219.h"
@@ -52,14 +54,38 @@
 #pragma config BOR4V = BOR40V   // Brown-out Reset Selection bit
 #pragma config WRT = OFF        // Flash Program Memory Self Write Enable bits
 
+typedef struct {
+    
+    uint8_t x;
+    uint8_t y;    
+    int8_t dir_x;
+    int8_t dir_y;
+    
+} ball_t;
+
+
+
 /* ------------------------ Prototipos de funciones ------------------------- */
 void gpio_config();
 void show_num(int num);
+void uart_config();
+uint8_t uart_rx_byte(uint8_t *dato);
+void uart_tx_byte(uint8_t dato);
 /* ------------------------ Implementación de funciones --------------------- */
 void main(void) {                       // Función principal
     int i;
-    gpio_config();                      // Inicializo las entradas y salidas
+    ball_t ball;
+     uint8_t dato_recibido, resultado;              // Variable donde se almacenan datos
 
+     ball.x = 3;
+     ball.y = 4;
+     
+     ball.dir_x = 1;
+     ball.dir_y = 1;
+     
+     
+    gpio_config();                      // Inicializo las entradas y salidas
+    uart_config();
     PORTD = 0;
     PIN_LED1 = 0;                       // Apago el LED1
     
@@ -69,20 +95,36 @@ void main(void) {                       // Función principal
     max7219_set_intensity (MAX_DISPLAY_0, 15);
     max7219_clear_display(MAX_DISPLAY_0);
     
-    
+    printf("Testing\r\n");
     
     while (1) { // Super loop
         // Ver este link: https://pbs.twimg.com/media/BafQje7CcAAN5en.jpg
-
-        for (i = 1; i <= 6; i++) {
-            show_num(i);
-            __delay_ms(50);
-
-
-            if (PIN_TEC1 == 0) { // Espero que se presione la TEC1
-                __delay_ms(3000); // Delay antirrebote
-            }
+        max7219_clear_display(MAX_DISPLAY_0);
+        max7219_set_led(MAX_DISPLAY_0, ball.y, ball.x, LED_ON);
+        __delay_ms(100);
+        ball.x = ball.x + ball.dir_x;
+        ball.y = ball.y + ball.dir_y;
+        if (ball.y == 7 || ball.y == 0){
+            ball.dir_y *= -1;
+          
         }
+        if (ball.x == 7 || ball.x == 0){
+            ball.dir_x *= -1;
+           
+        }
+                
+       
+        
+
+//        for (i = 1; i <= 6; i++) {
+//            show_num(i);
+//            __delay_ms(50);
+//
+//
+//            if (PIN_TEC1 == 0) { // Espero que se presione la TEC1
+//                __delay_ms(3000); // Delay antirrebote
+//            }
+//        }
     }
     
     // NO DEBE LLEGAR NUNCA AQUÍ, debido a que este programa se ejecuta
@@ -150,6 +192,70 @@ void show_num(int num){
             max7219_set_row(MAX_DISPLAY_0, 7, 0b01100110);
             break;
        
+    }
+}
+void uart_config() {
+    TXSTAbits.TX9 = 0;          //transmision de 8 bits
+    TXSTAbits.TXEN = 1;         // Transmision habilitada
+    TXSTAbits.SYNC = 0;         //modo asincronico
+    
+    TXSTAbits.BRGH = 0; 
+    BAUDCTLbits.BRG16 = 1;
+    SPBRG = 25;                 //baudrate de 9600
+    
+    RCSTAbits.SPEN = 1;         //puerto serie habilitado
+    RCSTAbits.RX9 = 0;          //recepcion 8 bits
+    RCSTAbits.CREN = 1;         //recepcion habilitada
+    // TODO: Completa configuración de la UART
+}
+
+/**
+ * @brief	Envía un byte a la salida stdout en forma bloqueante pero por poco tiempo
+ * @param	data    Byte o dato a transmitir
+ * @return	Nada
+ * @note    Define la salida estandar para la librería stdio
+ */
+void putch(char data) {
+    while (PIR1bits.TXIF == 0)   //Espera que haya espacio en la FIFO
+        continue;
+    TXREG = data;   //Envía el byte
+}
+
+/**
+ * @brief	Toma un byte de la entrada stdin en forma bloqueante
+ * @return	El byte recibido
+ * @note    Define la entrada estandar para la librería stdio
+ */
+char getch(void) {
+    while (PIR1bits.RCIF == 0)   //Espera hasta que haya un byte recibido
+        continue;
+    return RCREG;   //retorna lo recibido
+}
+
+/**
+ * @brief	Envía un byte a la salida stdout en forma bloqueante pero por poco tiempo
+ * @param	data    Byte o dato a transmitir
+ * @return	Nada
+ * @note    Define la salida estandar para la librería stdio
+ */
+void uart_tx_byte( uint8_t dato ) {
+    while (PIR1bits.TXIF == 0)   //Espera que haya espacio en la FIFO
+        continue;
+    TXREG = dato;   //Envía el byte
+}
+
+/**
+ * @brief       Toma un byte de la FIFO de recepción en forma no bloqueante,
+ *              chequea primero si hay un dato disponible
+ * @param[out]  dato    Apunta al destino para el byte recibido
+ * @return      1 si hay un byte recibido, 0 si no hay dato disponible 
+ */
+uint8_t uart_rx_byte( uint8_t *dato ) {
+    if (PIR1bits.RCIF == 1) {
+        *dato = RCREG;
+        return 1;
+    } else {
+        return 0;
     }
 }
 /* ------------------------ Fin de archivo ---------------------------------- */
