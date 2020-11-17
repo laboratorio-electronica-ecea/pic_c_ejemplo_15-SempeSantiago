@@ -62,6 +62,11 @@ typedef struct {
     int8_t dir_y;
     
 } ball_t;
+typedef struct {
+    uint8_t x;
+    uint8_t y;
+    uint8_t size;
+}line_t;
 
 
 
@@ -74,14 +79,27 @@ void uart_tx_byte(uint8_t dato);
 /* ------------------------ Implementación de funciones --------------------- */
 void main(void) {                       // Función principal
     int i;
-    ball_t ball;
+//    ball_t ball;
+//    line_t line;
      uint8_t dato_recibido, resultado;              // Variable donde se almacenan datos
-
-     ball.x = 3;
-     ball.y = 4;
+     int num;
      
-     ball.dir_x = 1;
-     ball.dir_y = 1;
+     char coordenada[2] = 'A1';
+     
+     int fila, columna;
+     fila = coordenada[0] - 'A';
+     columna = coordenada[1] - '1'
+           
+ 
+//     ball.x = 3;
+//     ball.y = 4;
+//     ball.dir_x = 1;
+//     ball.dir_y = 1;
+//     
+//     line.x = 0;
+//     line.y = 3;
+//     line.size = 3;
+           
      
      
     gpio_config();                      // Inicializo las entradas y salidas
@@ -99,20 +117,41 @@ void main(void) {                       // Función principal
     
     while (1) { // Super loop
         // Ver este link: https://pbs.twimg.com/media/BafQje7CcAAN5en.jpg
-        max7219_clear_display(MAX_DISPLAY_0);
-        max7219_set_led(MAX_DISPLAY_0, ball.y, ball.x, LED_ON);
-        __delay_ms(100);
-        ball.x = ball.x + ball.dir_x;
-        ball.y = ball.y + ball.dir_y;
-        if (ball.y == 7 || ball.y == 0){
-            ball.dir_y *= -1;
-          
-        }
-        if (ball.x == 7 || ball.x == 0){
-            ball.dir_x *= -1;
-           
-        }
-                
+//        max7219_clear_display(MAX_DISPLAY_0);
+//        max7219_set_led(MAX_DISPLAY_0, ball.y, ball.x, LED_ON);
+//        
+//        max7219_set_led(MAX_DISPLAY_0, line.y, line.x, LED_ON);
+//        max7219_set_led(MAX_DISPLAY_0, line.y + 1, line.x, LED_ON);
+//        max7219_set_led(MAX_DISPLAY_0, line.y + 2, line.x, LED_ON);
+//        __delay_ms(100);
+//        
+//        //Encuestas de teclas
+//        if (PIN_TEC1 == 0 && line.y + line.size < 8  ){
+//            line.y++;
+//        }
+//        if (PIN_TEC2 == 0 && line.y > 0){
+//            line.y--;
+//        }
+//        
+//        //Fisicas
+//        
+//        ball.x = ball.x + ball.dir_x;
+//        ball.y = ball.y + ball.dir_y;
+//        if (ball.y == 7 || ball.y == 0){
+//            ball.dir_y *= -1;
+//          
+//        }
+//        if (ball.x == 7 || ball.x == 0){
+//            ball.dir_x *= -1;
+//           
+//        }
+//        if (ball.x == line.x + 1 && ball.dir_x < 0){
+//            if (ball.y == line.y || ball.y == line.y + 1 || ball.y == line.y + 2 ){
+//                ball.dir_x *= -1;
+//                //ball.dir_y *= -1;                
+//                       
+//            }
+//        }        
        
         
 
@@ -124,7 +163,7 @@ void main(void) {                       // Función principal
 //            if (PIN_TEC1 == 0) { // Espero que se presione la TEC1
 //                __delay_ms(3000); // Delay antirrebote
 //            }
-//        }
+        
     }
     
     // NO DEBE LLEGAR NUNCA AQUÍ, debido a que este programa se ejecuta
@@ -175,14 +214,16 @@ void show_num(int num){
             max7219_set_row(MAX_DISPLAY_0, 5, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
             break;
-        case 5:
+        case 5: 
             max7219_set_row(MAX_DISPLAY_0, 1, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 2, 0b01100110);
-            max7219_set_row(MAX_DISPLAY_0, 3, 0b00011000);
-            max7219_set_row(MAX_DISPLAY_0, 4, 0b00011000);
             max7219_set_row(MAX_DISPLAY_0, 5, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
+            max7219_set_row(MAX_DISPLAY_0, 3, 0b00011000);
+            max7219_set_row(MAX_DISPLAY_0, 4, 0b00011000);
+            
             break;
+        
         case 6:
             max7219_set_row(MAX_DISPLAY_0, 0, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 1, 0b01100110);
