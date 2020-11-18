@@ -84,11 +84,11 @@ void main(void) {                       // Función principal
      uint8_t dato_recibido, resultado;              // Variable donde se almacenan datos
      int num;
      
-     char coordenada[2] = 'A1';
+     char coordenada[2] = "A1";
      
      int fila, columna;
      fila = coordenada[0] - 'A';
-     columna = coordenada[1] - '1'
+     columna = coordenada[1] - '1';
            
  
 //     ball.x = 3;
