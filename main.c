@@ -19,6 +19,8 @@
 #define LED_ON      1
 #define LED_OFF     0
 
+#define MAX_TABLE   8           //Cambiar este número para determinar el tamaño de la tabla
+
 /* ------------------------ Definición de salidas --------------------------- */
 #define PIN_LED1    PORTEbits.RE2
 #define TRIS_LED1   TRISEbits.TRISE2
@@ -67,6 +69,8 @@ typedef struct {
     uint8_t y;
     uint8_t size;
 }line_t;
+ball_t ball;
+line_t line;
 
 
 
@@ -76,29 +80,29 @@ void show_num(int num);
 void uart_config();
 uint8_t uart_rx_byte(uint8_t *dato);
 void uart_tx_byte(uint8_t dato);
+void refreshScreen();
+void calculateDir();
 /* ------------------------ Implementación de funciones --------------------- */
 void main(void) {                       // Función principal
     int i;
-//    ball_t ball;
-//    line_t line;
+
      uint8_t dato_recibido, resultado;              // Variable donde se almacenan datos
      int num;
      
-     char coordenada[2] = "A1";
+     char coordenada[2];
      
      int fila, columna;
-     fila = coordenada[0] - 'A';
-     columna = coordenada[1] - '1';
+
            
  
-//     ball.x = 3;
-//     ball.y = 4;
-//     ball.dir_x = 1;
-//     ball.dir_y = 1;
-//     
-//     line.x = 0;
-//     line.y = 3;
-//     line.size = 3;
+     ball.x = 2;
+     ball.y = 4;
+     ball.dir_x = 1;
+     ball.dir_y = 1;
+     
+     line.x = 0;
+     line.y = 3;
+     line.size = 3;
            
      
      
@@ -113,48 +117,63 @@ void main(void) {                       // Función principal
     max7219_set_intensity (MAX_DISPLAY_0, 15);
     max7219_clear_display(MAX_DISPLAY_0);
     
-    printf("Testing\r\n");
+    printf("Inserte Coordenadas\r\n");
     
     while (1) { // Super loop
         // Ver este link: https://pbs.twimg.com/media/BafQje7CcAAN5en.jpg
-//        max7219_clear_display(MAX_DISPLAY_0);
-//        max7219_set_led(MAX_DISPLAY_0, ball.y, ball.x, LED_ON);
-//        
-//        max7219_set_led(MAX_DISPLAY_0, line.y, line.x, LED_ON);
-//        max7219_set_led(MAX_DISPLAY_0, line.y + 1, line.x, LED_ON);
-//        max7219_set_led(MAX_DISPLAY_0, line.y + 2, line.x, LED_ON);
-//        __delay_ms(100);
-//        
-//        //Encuestas de teclas
-//        if (PIN_TEC1 == 0 && line.y + line.size < 8  ){
-//            line.y++;
-//        }
-//        if (PIN_TEC2 == 0 && line.y > 0){
-//            line.y--;
-//        }
-//        
-//        //Fisicas
-//        
-//        ball.x = ball.x + ball.dir_x;
-//        ball.y = ball.y + ball.dir_y;
-//        if (ball.y == 7 || ball.y == 0){
-//            ball.dir_y *= -1;
-//          
-//        }
-//        if (ball.x == 7 || ball.x == 0){
-//            ball.dir_x *= -1;
-//           
-//        }
-//        if (ball.x == line.x + 1 && ball.dir_x < 0){
-//            if (ball.y == line.y || ball.y == line.y + 1 || ball.y == line.y + 2 ){
-//                ball.dir_x *= -1;
-//                //ball.dir_y *= -1;                
-//                       
-//            }
-//        }        
-       
-        
+        //        resultado = uart_rx_byte(&dato_recibido);
+        //        if (resultado == 1) {
+        //            if (dato_recibido >= 'A' && dato_recibido <= MAX_TABLE + 'A' - 1) {
+        //                coordenada[0] = dato_recibido;
+        //                columna = coordenada[0] - 'A';
+        //                printf("%c",dato_recibido);
+        //            }
+        //            if (dato_recibido >= '1' && dato_recibido <= MAX_TABLE + '1' - 1) {
+        //                coordenada[1] = dato_recibido;                
+        //                fila = coordenada[1] - '1';
+        //                printf("%c",dato_recibido);               
+        //            }
+        //            if (dato_recibido == 'P'){
+        //                max7219_set_led(MAX_DISPLAY_0, columna, fila, LED_ON);
+        //                printf("\n\r");
+        //            }
+        //            if (dato_recibido == 'C'){
+        //                max7219_clear_display(MAX_DISPLAY_0);
+        //                
+        //            }
+        //        }
 
+
+
+
+
+
+
+
+        refreshScreen();
+
+        __delay_ms(100);
+
+        //Encuestas de teclas
+        if (PIN_TEC1 == 0 && line.y + line.size < 8) {
+            line.y++;
+        }
+        if (PIN_TEC2 == 0 && line.y > 0) {
+            line.y--;
+        }
+
+        //Fisicas
+
+        ball.x = ball.x + ball.dir_x;
+        ball.y = ball.y + ball.dir_y;
+
+
+
+        calculateDir();
+        
+        
+        
+// holasadas
 //        for (i = 1; i <= 6; i++) {
 //            show_num(i);
 //            __delay_ms(50);
@@ -299,4 +318,33 @@ uint8_t uart_rx_byte( uint8_t *dato ) {
         return 0;
     }
 }
+void refreshScreen(){
+    int idx;
+    max7219_clear_display(MAX_DISPLAY_0);
+        max7219_set_led(MAX_DISPLAY_0, ball.y, ball.x, LED_ON);
+        
+        for( idx = 0 ; idx < line.size ; idx++ ) {
+            max7219_set_led(MAX_DISPLAY_0, line.y + idx, line.x, LED_ON);
+        };
+}
+void calculateDir(){
+    if (ball.x == line.x + 1 && ball.dir_x < 0) {
+            if (ball.y == line.y || ball.y == line.y + 1 || ball.y == line.y + 2) {
+                ball.dir_x *= -1;
+            }
+            if (ball.y == line.y - 1 || ball.y == line.y + line.size) {
+                ball.dir_x *= -1;
+                ball.dir_y *= -1;
+                return;
+            }
+        }
+        if (ball.y == 7 || ball.y == 0) {
+            ball.dir_y *= -1;
+
+        }
+        if (ball.x == 7 || ball.x == 0) {
+            ball.dir_x *= -1;
+        }
+}
+
 /* ------------------------ Fin de archivo ---------------------------------- */
