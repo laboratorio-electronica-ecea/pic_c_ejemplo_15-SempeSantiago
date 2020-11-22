@@ -1,10 +1,11 @@
 /*
  * Nombre del archivo:   main.c
- * Autor:
+ * Autor:   Santiago Sempé
  *
  * Descripción: 
  *        Proyecto usando un display matricial con MAX7219.
  *        Sistema de cordenadas q mantiene encendidos los LEDs q se le piden
+ *        para dibujar en la tabla.
  */
 
 #include <xc.h>
@@ -56,21 +57,7 @@
 #pragma config BOR4V = BOR40V   // Brown-out Reset Selection bit
 #pragma config WRT = OFF        // Flash Program Memory Self Write Enable bits
 
-//typedef struct {
-//    
-//    uint8_t x;
-//    uint8_t y;    
-//    int8_t dir_x;
-//    int8_t dir_y;
-//    
-//} ball_t;
-//typedef struct {
-//    uint8_t x;
-//    uint8_t y;
-//    uint8_t size;
-//}line_t;
-//ball_t ball;
-//line_t line;
+
 
 
 
@@ -80,137 +67,91 @@ void show_num(int num);
 void uart_config();
 uint8_t uart_rx_byte(uint8_t *dato);
 void uart_tx_byte(uint8_t dato);
-//void refreshScreen();
-//void calculateDir();
+
 /* ------------------------ Implementación de funciones --------------------- */
-void main(void) {                       // Función principal
+void main(void) { // Función principal
     int i;
 
-     uint8_t dato_recibido, resultado;              // Variable donde se almacenan datos
-     int num;
-     
-     char coordenada[2];
-     
-     int fila, columna;
+    uint8_t dato_recibido, resultado; // Variable donde se almacenan datos
+    int num;
 
-           
- 
-//     ball.x = 2;
-//     ball.y = 4;
-//     ball.dir_x = 1;
-//     ball.dir_y = 1;
-//     
-//     line.x = 0;
-//     line.y = 3;
-//     line.size = 3;
-           
-     
-     
-    gpio_config();                      // Inicializo las entradas y salidas
+    char coordenada[2];
+
+    int fila, columna;
+
+
+
+
+
+
+
+    gpio_config(); // Inicializo las entradas y salidas
     uart_config();
     PORTD = 0;
-    PIN_LED1 = 0;                       // Apago el LED1
-    
+    PIN_LED1 = 0; // Apago el LED1
+
     max7219_config();
     max7219_shutdown(MAX_DISPLAY_0, 0);
     max7219_set_scan_limit(MAX_DISPLAY_0, 7);
-    max7219_set_intensity (MAX_DISPLAY_0, 15);
+    max7219_set_intensity(MAX_DISPLAY_0, 15);
     max7219_clear_display(MAX_DISPLAY_0);
-    
+
     printf("Inserte Coordenadas\r\n");
     printf("Las coordenadas van del 1 al 8 y de la A a la H\r\n");
     printf("Utilice 'P' para imprimir la coordenada y 'C' para limpiar la pantalla\r\n");
     while (1) { // Super loop
         // Ver este link: https://pbs.twimg.com/media/BafQje7CcAAN5en.jpg
-                resultado = uart_rx_byte(&dato_recibido);
-                if (resultado == 1) {
-                    if (dato_recibido >= 'A' && dato_recibido <= MAX_TABLE + 'A' - 1) {
-                        coordenada[0] = dato_recibido;
-                        columna = coordenada[0] - 'A';
-                        printf("%c",dato_recibido);
-                    }
-                    if (dato_recibido >= '1' && dato_recibido <= MAX_TABLE + '1' - 1) {
-                        coordenada[1] = dato_recibido;                
-                        fila = coordenada[1] - '1';
-                        printf("%c",dato_recibido);               
-                    }
-                    if (dato_recibido == 'P'){
-                        max7219_set_led(MAX_DISPLAY_0, columna, fila, LED_ON);
-                        printf("\n\r");
-                    }
-                    if (dato_recibido == 'Z'){
-                        max7219_clear_display(MAX_DISPLAY_0);
-                        
-                    }
-                }
+        resultado = uart_rx_byte(&dato_recibido);
+        if (resultado == 1) {
+            if (dato_recibido >= 'A' && dato_recibido <= MAX_TABLE + 'A' - 1) {
+                coordenada[0] = dato_recibido;
+                columna = coordenada[0] - 'A';
+                printf("%c", dato_recibido);
+            }
+            if (dato_recibido >= '1' && dato_recibido <= MAX_TABLE + '1' - 1) {
+                coordenada[1] = dato_recibido;
+                fila = coordenada[1] - '1';
+                printf("%c", dato_recibido);
+            }
+            if (dato_recibido == 'P') {
+                max7219_set_led(MAX_DISPLAY_0, columna, fila, LED_ON);
+                printf("\n\r");
+            }
+            if (dato_recibido == 'Z') {
+                max7219_clear_display(MAX_DISPLAY_0);
+
+            }
+        }
 
 
-
-
-
-
-//
-//
-//        refreshScreen();
-//
-//        __delay_ms(100);
-//
-//        //Encuestas de teclas
-//        if (PIN_TEC1 == 0 && line.y + line.size < 8) {
-//            line.y++;
-//        }
-//        if (PIN_TEC2 == 0 && line.y > 0) {
-//            line.y--;
-//        }
-//
-//        //Fisicas
-//
-//        ball.x = ball.x + ball.dir_x;
-//        ball.y = ball.y + ball.dir_y;
-//
-//
-//
-//        calculateDir();
-//        
-        
-        
-// holasadas
-//        for (i = 1; i <= 6; i++) {
-//            show_num(i);
-//            __delay_ms(50);
-//
-//
-//            if (PIN_TEC1 == 0) { // Espero que se presione la TEC1
-//                __delay_ms(3000); // Delay antirrebote
-//            }
-        
     }
-    
+
     // NO DEBE LLEGAR NUNCA AQUÍ, debido a que este programa se ejecuta
     // directamente sobre un microcontrolador y no es llamado por un ningún
     // sistema operativo, como en el caso de un programa para PC.
-    
+
     return;
 }
 
-void interrupt isr() {                  // Rutina de atención de interrupciones
+void interrupt isr() { // Rutina de atención de interrupciones
     // Esta rutina debe ejecutarse rápidamente sin delays ni loops infinitos.
     // Recuerda colocar en 0 el flag que provocó la interrupción.
 }
 
 void gpio_config() {
-    ANSEL = 0;                          // Configuro todas las entradas
-    ANSELH = 0;                         // como digitales
-    
-    TRIS_TEC1 = 1;                      // Configuro la TEC1 como entrada
-    TRIS_LED1 = 0;                      // Configuro el LED1 como salida
-    
+    ANSEL = 0; // Configuro todas las entradas
+    ANSELH = 0; // como digitales
+
+    TRIS_TEC1 = 1; // Configuro la TEC1 como entrada
+    TRIS_LED1 = 0; // Configuro el LED1 como salida
+
     TRISD = 0;
 }
-void show_num(int num){
+
+void show_num(int num) {
     max7219_clear_display(MAX_DISPLAY_0);
-    switch(num){
-        case 1:            
+    switch (num) {
+        case 1:
             max7219_set_row(MAX_DISPLAY_0, 3, 0b00011000);
             max7219_set_row(MAX_DISPLAY_0, 4, 0b00011000);
             break;
@@ -234,16 +175,16 @@ void show_num(int num){
             max7219_set_row(MAX_DISPLAY_0, 5, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
             break;
-        case 5: 
+        case 5:
             max7219_set_row(MAX_DISPLAY_0, 1, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 2, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 5, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 3, 0b00011000);
             max7219_set_row(MAX_DISPLAY_0, 4, 0b00011000);
-            
+
             break;
-        
+
         case 6:
             max7219_set_row(MAX_DISPLAY_0, 0, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 1, 0b01100110);
@@ -252,21 +193,22 @@ void show_num(int num){
             max7219_set_row(MAX_DISPLAY_0, 6, 0b01100110);
             max7219_set_row(MAX_DISPLAY_0, 7, 0b01100110);
             break;
-       
+
     }
 }
+
 void uart_config() {
-    TXSTAbits.TX9 = 0;          //transmision de 8 bits
-    TXSTAbits.TXEN = 1;         // Transmision habilitada
-    TXSTAbits.SYNC = 0;         //modo asincronico
-    
-    TXSTAbits.BRGH = 0; 
+    TXSTAbits.TX9 = 0; //transmision de 8 bits
+    TXSTAbits.TXEN = 1; // Transmision habilitada
+    TXSTAbits.SYNC = 0; //modo asincronico
+
+    TXSTAbits.BRGH = 0;
     BAUDCTLbits.BRG16 = 1;
-    SPBRG = 25;                 //baudrate de 9600
-    
-    RCSTAbits.SPEN = 1;         //puerto serie habilitado
-    RCSTAbits.RX9 = 0;          //recepcion 8 bits
-    RCSTAbits.CREN = 1;         //recepcion habilitada
+    SPBRG = 25; //baudrate de 9600
+
+    RCSTAbits.SPEN = 1; //puerto serie habilitado
+    RCSTAbits.RX9 = 0; //recepcion 8 bits
+    RCSTAbits.CREN = 1; //recepcion habilitada
     // TODO: Completa configuración de la UART
 }
 
@@ -277,9 +219,9 @@ void uart_config() {
  * @note    Define la salida estandar para la librería stdio
  */
 void putch(char data) {
-    while (PIR1bits.TXIF == 0)   //Espera que haya espacio en la FIFO
+    while (PIR1bits.TXIF == 0) //Espera que haya espacio en la FIFO
         continue;
-    TXREG = data;   //Envía el byte
+    TXREG = data; //Envía el byte
 }
 
 /**
@@ -288,9 +230,9 @@ void putch(char data) {
  * @note    Define la entrada estandar para la librería stdio
  */
 char getch(void) {
-    while (PIR1bits.RCIF == 0)   //Espera hasta que haya un byte recibido
+    while (PIR1bits.RCIF == 0) //Espera hasta que haya un byte recibido
         continue;
-    return RCREG;   //retorna lo recibido
+    return RCREG; //retorna lo recibido
 }
 
 /**
@@ -299,10 +241,10 @@ char getch(void) {
  * @return	Nada
  * @note    Define la salida estandar para la librería stdio
  */
-void uart_tx_byte( uint8_t dato ) {
-    while (PIR1bits.TXIF == 0)   //Espera que haya espacio en la FIFO
+void uart_tx_byte(uint8_t dato) {
+    while (PIR1bits.TXIF == 0) //Espera que haya espacio en la FIFO
         continue;
-    TXREG = dato;   //Envía el byte
+    TXREG = dato; //Envía el byte
 }
 
 /**
@@ -311,7 +253,7 @@ void uart_tx_byte( uint8_t dato ) {
  * @param[out]  dato    Apunta al destino para el byte recibido
  * @return      1 si hay un byte recibido, 0 si no hay dato disponible 
  */
-uint8_t uart_rx_byte( uint8_t *dato ) {
+uint8_t uart_rx_byte(uint8_t *dato) {
     if (PIR1bits.RCIF == 1) {
         *dato = RCREG;
         return 1;
@@ -319,33 +261,6 @@ uint8_t uart_rx_byte( uint8_t *dato ) {
         return 0;
     }
 }
-//void refreshScreen(){
-//    int idx;
-//    max7219_clear_display(MAX_DISPLAY_0);
-//        max7219_set_led(MAX_DISPLAY_0, ball.y, ball.x, LED_ON);
-//        
-//        for( idx = 0 ; idx < line.size ; idx++ ) {
-//            max7219_set_led(MAX_DISPLAY_0, line.y + idx, line.x, LED_ON);
-//        };
-//}
-//void calculateDir(){
-//    if (ball.x == line.x + 1 && ball.dir_x < 0) {
-//            if (ball.y == line.y || ball.y == line.y + 1 || ball.y == line.y + 2) {
-//                ball.dir_x *= -1;
-//            }
-//            if (ball.y == line.y - 1 || ball.y == line.y + line.size) {
-//                ball.dir_x *= -1;
-//                ball.dir_y *= -1;
-//                return;
-//            }
-//        }
-//        if (ball.y == 7 || ball.y == 0) {
-//            ball.dir_y *= -1;
-//
-//        }
-//        if (ball.x == 7 || ball.x == 0) {
-//            ball.dir_x *= -1;
-//        }
-//}
+
 
 /* ------------------------ Fin de archivo ---------------------------------- */
