@@ -138,7 +138,7 @@ void main(void) {                       // Función principal
                         max7219_set_led(MAX_DISPLAY_0, columna, fila, LED_ON);
                         printf("\n\r");
                     }
-                    if (dato_recibido == 'C'){
+                    if (dato_recibido == 'Z'){
                         max7219_clear_display(MAX_DISPLAY_0);
                         
                     }
